@@ -15,7 +15,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
 # --- VERCEL PATH FIX ---
-# Flask needs absolute paths in serverless environments to find templates/static
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -24,11 +23,9 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 SECRET_KEY = os.environ.get("SECRET_KEY", "your-very-secret-key-12345")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
-# Vercel /tmp is the only writable directory
 SQLALCHEMY_DATABASE_URL = "sqlite:////tmp/users.db"
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "e9b7e28caeb74456b4d38b637164d08f")
 
-# Ticker Corrector
 TICKER_CORRECTOR = {"RELAINCE.NS": "RELIANCE.NS", "RELAINCE": "RELIANCE.NS"}
 TICKER_MAP = {"AAPL": "Apple Inc", "TSLA": "Tesla", "MSFT": "Microsoft", "GOOGL": "Google", "RELIANCE.NS": "Reliance Industries"}
 
@@ -52,7 +49,11 @@ class PredictionHistory(Base):
     confidence = Column(String)
     timestamp = Column(String)
 
-Base.metadata.create_all(bind=engine)
+# Initialize DB in /tmp/
+try:
+    Base.metadata.create_all(bind=engine)
+except:
+    pass
 
 # --- SECURITY ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -62,13 +63,6 @@ def create_access_token(data: dict):
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-def get_db():
-    db = SessionLocal()
-    try:
-        return db
-    finally:
-        pass # Handle closing in routes
 
 def get_current_user_from_request():
     auth_header = request.headers.get('Authorization')
@@ -113,12 +107,18 @@ def generate_features(ticker: str):
 # --- FLASK APP ---
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR, static_url_path='/static')
 
-# Load ML Artifacts
-try:
-    MODEL = joblib.load(os.path.join(BASE_DIR, "stock_model.pkl"))
-    FEATURE_COLS = joblib.load(os.path.join(BASE_DIR, "feature_columns.pkl"))
-except:
-    MODEL, FEATURE_COLS = None, None
+# Load ML Artifacts (LAZY LOADING to avoid cold start timeouts)
+MODEL = None
+FEATURE_COLS = None
+
+def load_artifacts():
+    global MODEL, FEATURE_COLS
+    if MODEL is None:
+        try:
+            MODEL = joblib.load(os.path.join(BASE_DIR, "stock_model.pkl"))
+            FEATURE_COLS = joblib.load(os.path.join(BASE_DIR, "feature_columns.pkl"))
+        except:
+            pass
 
 # --- PAGE ROUTES ---
 @app.route("/")
@@ -183,6 +183,7 @@ def get_stock_data():
 
 @app.route("/predict", methods=['POST'])
 def predict():
+    load_artifacts() # Load only when prediction starts
     user = get_current_user_from_request()
     if not user: return jsonify({"detail": "Unauthorized"}), 401
     ticker = request.args.get('ticker', 'AAPL').upper()
@@ -196,7 +197,6 @@ def predict():
         technical_up_prob = float(MODEL.predict_proba(df[FEATURE_COLS])[0][1])
         pred_text = "UP" if technical_up_prob >= 0.5 else "DOWN"
         
-        # News Sentiment (simplified for speed)
         company_name = TICKER_MAP.get(ticker, ticker)
         sentiment_label = "Neutral"
         articles = []
@@ -217,5 +217,5 @@ def predict():
         })
     except Exception as e: return jsonify({"detail": str(e)}), 500
 
-# Vercel entry
-app.debug = False
+# Vercel Runtime Handler
+# No app.run() or if __name__ block
