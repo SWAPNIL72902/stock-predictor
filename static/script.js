@@ -1,130 +1,112 @@
-// --- Common Utilities ---
-function getToken() { return localStorage.getItem('token'); }
+/* 
+  Stable Frontend Logic for Terminal.AI
+  Handles Async flow, UI Syncing, and Error Recovery.
+*/
 
-async function apiCall(endpoint, method = 'GET', body = null) {
-    const headers = { 'Content-Type': 'application/json' };
-    const token = getToken();
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-
-    const config = { method, headers };
-    if (body) config.body = JSON.stringify(body);
-
-    const res = await fetch(endpoint, config);
-    if (res.status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/';
-        return null;
-    }
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'API request failed');
-    return data;
-}
-
-// --- Dashboard Logic ---
-let dashboardChart = null;
+let chart = null;
 
 async function runPrediction() {
-    const tickerInput = document.getElementById('tickerInput');
-    const ticker = tickerInput.value.trim().toUpperCase();
-    if (!ticker) return;
+    const input = document.getElementById('ticker-input');
+    const ticker = input.value.trim().toUpperCase();
+    if (!input || !ticker) return;
 
+    const btn = document.getElementById('predict-btn');
     const loader = document.getElementById('loader');
-    const resultsGrid = document.getElementById('resultsGrid');
-    const dashboardHeader = document.getElementById('dashboardHeader');
-    const btnText = document.getElementById('btnText');
-    const errorBox = document.getElementById('errorBox');
+    const results = document.getElementById('results-area');
+    const btnText = document.getElementById('btn-text');
+    const errorBox = document.getElementById('error-box');
 
-    // Prevent double calls
-    const btn = document.getElementById('predictBtn');
-    if (btn.disabled) return;
-
-    // 1. Start loading
+    // 1. Enter Loading State
     btn.disabled = true;
     btnText.textContent = 'Analyzing...';
     errorBox.classList.add('hidden');
-    resultsGrid.classList.add('hidden');
-    dashboardHeader.classList.add('hidden');
+    results.classList.add('hidden');
     loader.classList.remove('hidden');
 
     try {
-        // 2. Fetch data
-        const [predData, chartData] = await Promise.all([
-            apiCall(`/predict?ticker=${ticker}`, 'POST'),
-            apiCall(`/stock-data?ticker=${ticker}`)
+        // 2. Parallel Fetch Phase
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const [predRes, chartRes] = await Promise.all([
+            fetch(`/predict?ticker=${ticker}`, { method: 'POST', headers }),
+            fetch(`/stock-data?ticker=${ticker}`)
         ]);
 
-        // 3. Update UI
+        if (predRes.status === 401) { window.location.href = '/'; return; }
+        
+        const predData = await predRes.json();
+        const chartData = await chartRes.json();
+
+        if (!predRes.ok) throw new Error(predData.detail || 'Inference Failed');
+
+        // 3. Update Visuals Phase
         updatePredictionUI(predData);
         updateChartUI(chartData);
 
-        // 4. Show results
-        dashboardHeader.classList.remove('hidden');
-        resultsGrid.classList.remove('hidden');
+        // 4. Reveal Phase
+        loader.classList.add('hidden');
+        results.classList.remove('hidden');
+
     } catch (err) {
         console.error(err);
-        errorBox.textContent = err.message;
+        loader.classList.add('hidden');
+        errorBox.textContent = err.message || 'Node Error: Data Stream Interrupted';
         errorBox.classList.remove('hidden');
     } finally {
-        // 5. Cleanup
-        loader.classList.add('hidden');
         btn.disabled = false;
         btnText.textContent = 'Run Neural Forecast';
     }
 }
 
 function updatePredictionUI(data) {
-    document.getElementById('activeTicker').textContent = data.ticker;
-    const badge = document.getElementById('predictionBadge');
-    badge.textContent = data.prediction;
-    badge.className = `prediction-badge ${data.prediction === 'UP' ? 'badge-up' : 'badge-down'}`;
+    document.getElementById('active-id').textContent = data.ticker;
+    const predEl = document.getElementById('prediction-badge');
+    const bar = document.getElementById('conf-bar');
+    const pct = document.getElementById('conf-pct');
 
-    document.getElementById('confidencePct').textContent = `${(data.confidence * 100).toFixed(1)}%`;
-    document.getElementById('confidenceBar').style.width = `${(data.confidence * 100)}%`;
+    predEl.textContent = data.prediction;
+    predEl.className = `prediction-val fade-in ${data.prediction === 'UP' ? 'up-color' : 'down-color'}`;
+    
+    // Smooth meter logic
+    const score = (data.confidence * 100).toFixed(1);
+    pct.textContent = `${score}%`;
+    bar.style.width = `${score}%`;
+    bar.style.backgroundColor = data.prediction === 'UP' ? '#00ff88' : '#ef4444';
 
-    const sentLabel = document.getElementById('sentLabel');
-    sentLabel.textContent = data.sentiment_label || 'Neutral';
-    sentLabel.className = `sentiment-badge ${data.sentiment_label === 'Positive' ? 'sent-pos' : data.sentiment_label === 'Negative' ? 'sent-neg' : 'sent-neu'}`;
-
-    const newsList = document.getElementById('newsList');
-    newsList.innerHTML = '';
+    // News
+    const newsArea = document.getElementById('news-list');
+    newsArea.innerHTML = '';
     if (data.news && data.news.length > 0) {
         data.news.forEach(n => {
-            const div = document.createElement('div');
-            div.className = 'news-item';
-            div.innerHTML = `<div class="news-title">${n.title}</div><div class="news-meta">${n.source} • ${n.sentiment_label}</div>`;
-            newsList.appendChild(div);
+            const item = document.createElement('div');
+            item.className = 'news-item fade-in';
+            const badgeClass = n.sentiment_label === 'Positive' ? 'pos-badge' : n.sentiment_label === 'Negative' ? 'neg-badge' : 'neu-badge';
+            item.innerHTML = `<span class="news-title">${n.title}</span><div style="display:flex; justify-content:space-between; margin-top:0.25rem;"><span style="font-size:0.7rem; color:var(--text-muted);">${n.source}</span><span class="badge ${badgeClass}">${n.sentiment_label}</span></div>`;
+            newsArea.appendChild(item);
         });
     } else {
-        newsList.innerHTML = '<p style="color:var(--text-muted); font-size:0.875rem;">No recent intelligence reports.</p>';
+        newsArea.innerHTML = '<p style="text-align:center; padding:1rem; color:var(--text-muted); font-size:0.8rem;">No Intelligence Reports at this Node.</p>';
     }
 }
 
 function updateChartUI(data) {
-    document.getElementById('lastPrice').textContent = `${data.currency} ${data.last_price}`;
-    const ctx = document.getElementById('stockChart').getContext('2d');
-    if (dashboardChart) dashboardChart.destroy();
+    document.getElementById('last-price').textContent = `${data.currency} ${data.last_price}`;
+    const ctx = document.getElementById('stock-chart').getContext('2d');
+    if (chart) chart.destroy();
 
     const grad = ctx.createLinearGradient(0, 0, 0, 400);
     grad.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-    dashboardChart = new Chart(ctx, {
+    chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: data.dates.map(d => d.split('-').slice(1).join('/')),
-            datasets: [{
-                data: data.prices,
-                borderColor: '#3b82f6',
-                borderWidth: 3,
-                tension: 0.4,
-                pointRadius: 0,
-                fill: true,
-                backgroundColor: grad
-            }]
+            datasets: [{ data: data.prices, borderColor: '#3b82f6', tension: 0.4, fill: true, backgroundColor: grad, pointRadius: 0, borderWidth: 4 }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
                 y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b' } },
@@ -134,65 +116,15 @@ function updateChartUI(data) {
     });
 }
 
-// --- Auth Handling ---
-async function handleFormSubmit(e, type) {
-    e.preventDefault();
-    const btn = e.target.querySelector('button');
-    const spinner = btn.querySelector('.spinner');
-    const btnText = btn.querySelector('.btn-text-content');
-    const alert = document.getElementById('authAlert');
-
-    const username = e.target.username.value;
-    const password = e.target.password.value;
-
-    btn.disabled = true;
-    spinner.classList.remove('hidden');
-    alert.classList.add('hidden');
-
-    try {
-        const data = await apiCall(type === 'login' ? '/login' : '/signup', 'POST', { username, password });
-        if (data) {
-            localStorage.setItem('token', data.access_token);
-            window.location.href = '/dashboard';
-        }
-    } catch (err) {
-        alert.textContent = err.message;
-        alert.classList.remove('hidden');
-    } finally {
-        btn.disabled = false;
-        spinner.classList.add('hidden');
-    }
-}
-
-// --- Lifecycle ---
+// Lifecycle Init
 document.addEventListener('DOMContentLoaded', () => {
-    const currentPath = window.location.pathname;
-
-    // Login/Signup setup
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) loginForm.addEventListener('submit', (e) => handleFormSubmit(e, 'login'));
-
-    const signupForm = document.getElementById('signupForm');
-    if (signupForm) signupForm.addEventListener('submit', (e) => handleFormSubmit(e, 'signup'));
-
-    // Dashboard setup
-    const predictForm = document.getElementById('predictForm');
-    if (predictForm) {
-        if (!getToken()) window.location.href = '/';
-        predictForm.addEventListener('submit', (e) => {
+    const input = document.getElementById('ticker-input');
+    const form = document.getElementById('predict-form');
+    
+    if (form) {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             runPrediction();
-        });
-        runPrediction(); // Initial load for default AAPL
-    }
-
-    // Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('token');
-            window.location.href = '/';
         });
     }
 });

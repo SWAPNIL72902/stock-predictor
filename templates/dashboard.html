@@ -3,106 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | AI Stock Intelligence</title>
+    <title>AI Stock Intelligence | Dashboard</title>
+    
+    <!-- Stable Frontend Assets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="dashboard">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                    <polyline points="17 6 23 6 23 12"></polyline>
-                </svg>
-                Terminal.AI
-            </div>
-            <nav>
-                <a href="/dashboard" class="nav-link active">Dashboard</a>
-                <a href="/analytics" class="nav-link">Analytics</a>
-                <a href="/settings" class="nav-link">Settings</a>
-                <a href="#" id="logoutBtn" class="nav-link" style="color: var(--danger); margin-top: 2rem;">Disconnect</a>
-            </nav>
-        </aside>
+    <!-- Subtle Animated Background -->
+    <div class="bg-animate"></div>
 
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <header>
-                <h1 style="font-size: 1.25rem; font-weight: 800;">AI Stock Intelligence Dashboard</h1>
-                <form id="predictForm" class="search-form">
-                    <input type="text" id="tickerInput" class="form-input" placeholder="RELIANCE.NS, TSLA, AAPL" value="AAPL" autocomplete="off" required>
-                    <button type="submit" id="predictBtn" class="btn btn-primary">
-                        <span id="btnText">Run Neural Forecast</span>
-                    </button>
-                </form>
-            </header>
+    <div class="container container-dashboard">
+        <header>
+            <h1>AI Stock Intelligence Dashboard</h1>
+            <p>Real-time prediction + neural sentiment analysis</p>
+            
+            <form id="predict-form" class="search-section">
+                <input type="text" id="ticker-input" class="input-field" placeholder="Enter Stock Ticker (e.g. AAPL)" value="AAPL" autocomplete="off" autofocus required>
+                <button type="submit" id="predict-btn" class="btn-predict">
+                    <span id="btn-text">Run Neural Forecast</span>
+                </button>
+            </form>
+        </header>
 
-            <!-- Error Box -->
-            <div id="errorBox" class="alert hidden" style="margin-bottom: 2rem;"></div>
+        <!-- Loader State -->
+        <div id="loader" class="loader-container hidden">
+            <div class="spinner"></div>
+            <p style="color: var(--text-muted); font-size: 0.85rem; font-weight: 700; letter-spacing: 2px;">SCANNING NEURAL NODES...</p>
+        </div>
 
-            <!-- Loader State -->
-            <div id="loader" class="loader-container hidden">
-                <div class="spinner"></div>
-                <p style="color: var(--text-muted); font-size: 0.875rem;">SCANNING NEURAL NODES...</p>
-            </div>
+        <!-- Notification Center (Errors) -->
+        <div id="error-box" class="glass-card hidden" style="text-align: center; color: var(--neon-red); border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);"></div>
 
-            <!-- Results Dashboard (Hidden when loading) -->
-            <div id="dashboardHeader" class="card hidden fade-in" style="display: flex; justify-content: space-between; padding: 1.5rem 2.5rem;">
+        <!-- Dashboard Result Section -->
+        <div id="results-area" class="hidden fade-in">
+            <!-- Institutional Stock Status -->
+            <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 3rem;">
                 <div style="display: flex; gap: 4rem;">
                     <div>
-                        <span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Node ID</span>
-                        <h2 id="activeTicker" style="font-size: 1.5rem; font-weight: 900;">AAPL</h2>
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Node Identification</span>
+                        <h2 id="active-id" style="font-size: 1.5rem; font-weight: 900;">AAPL</h2>
                     </div>
                     <div>
-                        <span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 800; text-transform: uppercase;">Current Price</span>
-                        <h2 id="lastPrice" style="font-size: 1.5rem; font-weight: 900;">$ --.--</h2>
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Current Live Price</span>
+                        <h2 id="last-price" style="font-size: 1.5rem; font-weight: 900;">$ --.--</h2>
                     </div>
-                </div>
-                <div style="text-align: right;">
-                    <span style="color: var(--text-muted); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem; display: block;">Sentiment</span>
-                    <span id="sentLabel" class="sentiment-badge sent-neu">Neutral</span>
                 </div>
             </div>
 
-            <div id="resultsGrid" class="hidden" style="display: grid; grid-template-columns: 350px 1fr; gap: 1.5rem;">
-                <!-- Left Column -->
-                <div class="fade-in">
-                    <div class="card">
-                        <h3 class="card-title">Recommendation</h3>
-                        <div style="text-align: center; padding: 1rem 0;">
-                            <div id="predictionBadge" class="prediction-badge badge-up">...</div>
-                            <div style="margin-top: 1.5rem; text-align: left;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem;">
-                                    <span>AI CONFIDENCE</span>
-                                    <span id="confidencePct">0%</span>
-                                </div>
-                                <div class="progress-track"><div id="confidenceBar" class="progress-bar" style="width: 0%"></div></div>
+            <div class="result-grid">
+                <!-- Data Visual Column -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <div class="glass-card">
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Neural recommendation</span>
+                        <div id="prediction-badge" class="prediction-val">...</div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem;">
+                                <span>AI INFERENCE CONFIDENCE</span>
+                                <span id="conf-pct">0%</span>
+                            </div>
+                            <div class="confidence-track">
+                                <div id="conf-bar" class="confidence-bar" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card">
-                        <h3 class="card-title">Intelligence Feed</h3>
-                        <div id="newsList"></div>
+                    <div class="glass-card">
+                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 1.5rem; display: block;">Economic Intelligence List</span>
+                        <div id="news-list"></div>
                     </div>
                 </div>
 
-                <!-- Right Column -->
-                <div class="card fade-in" style="min-height: 480px; display: flex; flex-direction: column;">
-                    <h3 class="card-title">30D Performance Visualization</h3>
+                <!-- Analysis Column -->
+                <div class="glass-card" style="display: flex; flex-direction: column; min-height: 520px;">
+                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 1.5rem; display: block;">30D Historical Performance Map</span>
                     <div style="flex: 1; position: relative;">
-                        <canvas id="stockChart"></canvas>
+                        <canvas id="stock-chart"></canvas>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem;">
+            <a href="#" id="logout-btn" style="color: var(--text-muted); font-size: 0.8rem; text-decoration: none; font-weight: 700;">Disconnect Terminal</a>
+        </div>
     </div>
 
-    <!-- Final Scripts -->
+    <!-- Correct Frontend Driver -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!localStorage.getItem('token')) window.location.href = '/';
+            // Trigger default load
+            setTimeout(() => runPrediction(), 300);
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+    </script>
 </body>
 </html>
