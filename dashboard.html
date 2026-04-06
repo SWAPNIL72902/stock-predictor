@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Stock Intelligence | Dashboard</title>
+    <title>Terminal.AI | Neural Intelligence</title>
     
     <!-- Stable Frontend Assets -->
     <link rel="stylesheet" href="./style.css">
@@ -12,91 +12,81 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Premium Animated Background (CSS Only) -->
-    <div class="bg-animate">
-        <div class="bg-pattern"></div>
-        <div class="bg-glow glow-1"></div>
-        <div class="bg-glow glow-2"></div>
-    </div>
+    <!-- Background Canvas (Neural Dotted Surface) -->
+    <canvas id="bg-canvas"></canvas>
 
     <div class="container">
-        <!-- HEADER: Node Identification & Live Price -->
+        <!-- SEARCH BAR (MODERN) -->
+        <form id="search-form" class="search-container">
+            <input type="text" id="search-input" class="search-input" placeholder="Enter Stock Ticker (e.g. RELIANCE.NS, TSLA, AAPL)" autocomplete="off" required>
+            <button type="submit" class="btn-analyze">Analyze Neural Node</button>
+        </form>
+
+        <!-- DASHBOARD HEADER -->
         <header class="dashboard-header">
             <div class="node-info">
-                <span class="node-status">Active Intelligence Node</span>
-                <h2>RELIANCE.NS</h2>
+                <span class="node-status">Active Intelligence Node Established</span>
+                <h2 id="active-id">RELIANCE.NS</h2>
             </div>
             <div class="price-display">
                 <span class="price-label">Current Live Price</span>
-                <div id="live-price" class="price-value">Loading Node...</div>
+                <div id="live-price" class="price-value">Loading...</div>
             </div>
         </header>
 
         <!-- MAIN DASHBOARD GRID -->
         <div class="dashboard-grid">
             
-            <!-- LEFT PANEL: Prediction & Insights -->
+            <!-- LEFT PANEL -->
             <div class="panel-left">
-                <!-- Neural Recommendation Tier -->
-                <div class="glass-card recommendation-area">
-                    <span class="section-title">Neural Recommendation</span>
-                    <div class="prediction-val val-up">VAL-UP</div>
-                    
-                    <div style="margin-top: 1.5rem; text-align: left;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem;">
-                            <span>AI INFERENCE CONFIDENCE</span>
-                            <span id="conf-pct">89.4%</span>
-                        </div>
-                        <div class="confidence-track">
-                            <div class="confidence-bar" style="width: 89.4%"></div>
+                <!-- Neural Recommendation Tier (Spotlight Effect) -->
+                <div class="glow-card">
+                    <div class="card-content">
+                        <span class="section-title">Neural Recommendation</span>
+                        <div id="prediction-badge" class="prediction-val val-up">...</div>
+                        
+                        <div style="margin-top: 1.5rem; text-align: left;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem;">
+                                <span style="color: var(--text-muted);">AI INFERENCE CONFIDENCE</span>
+                                <span id="conf-pct">--%</span>
+                            </div>
+                            <div class="confidence-track">
+                                <div id="conf-bar" class="confidence-bar" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Intelligence List -->
-                <div class="glass-card">
-                    <span class="section-title">Intelligence Feed</span>
-                    <div class="news-item">
-                        <span class="news-title">Institutional Accumulation Detected in RELIANCE Node</span>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
-                            <span>Global Intelligence</span>
-                            <span style="color: var(--neon-green); font-weight: 700;">Positive</span>
-                        </div>
-                    </div>
-                    <div class="news-item">
-                        <span class="news-title">Expansion into Neural Telecom Sector Confirmed</span>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
-                            <span>Business Intelligence</span>
-                            <span style="color: var(--neon-green); font-weight: 700;">Positive</span>
-                        </div>
-                    </div>
-                    <div class="news-item">
-                        <span class="news-title">Whale Transaction Movement for Ticker RELIANCE.NS</span>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
-                            <span>Market Delta</span>
-                            <span style="color: var(--text-muted); font-weight: 700;">Neutral</span>
+                <!-- Intelligence Feed (Spotlight Effect) -->
+                <div class="glow-card">
+                    <div class="card-content">
+                        <span class="section-title">Intelligence Feed</span>
+                        <div id="news-list">
+                            <p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 1rem;">Establishing Intelligence Stream...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: Performance Visualization -->
-            <div class="glass-card chart-card">
-                <span class="section-title">30D Historical Performance Map</span>
-                <div class="chart-container">
-                    <canvas id="market-chart"></canvas>
+            <!-- RIGHT PANEL: Performance Visualization (Spotlight Effect) -->
+            <div class="glow-card chart-card">
+                <div class="card-content" style="flex:1; display:flex; flex-direction:column;">
+                    <span class="section-title">30D Historical Performance Map</span>
+                    <div class="chart-container">
+                        <canvas id="market-chart"></canvas>
+                    </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- Sync Indicator -->
+        <!-- SYNC INDICATOR -->
         <div class="refresh-indicator">
             <div class="pulse-dot"></div>
-            Neural Link Status: Active (60s Refresh)
+            Neural Link: Active (60s Refresh)
         </div>
     </div>
 
