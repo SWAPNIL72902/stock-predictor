@@ -19,16 +19,15 @@
     <canvas id="bg-canvas"></canvas>
 
     <div class="container">
-        <!-- SEARCH BAR (MODERN) -->
         <form id="search-form" class="search-container">
-            <input type="text" id="search-input" class="search-input" placeholder="Enter Stock Ticker (e.g. RELIANCE.NS, TSLA, AAPL)" autocomplete="off" required>
-            <button type="submit" class="btn-analyze">Analyze Neural Node</button>
+            <input type="text" id="search-input" class="search-input" placeholder="Search Ticker (e.g. RELIANCE.NS, TSLA, AAPL)" autocomplete="off" required>
+            <button type="submit" class="predict-btn">Predict</button>
         </form>
 
         <!-- DASHBOARD HEADER -->
         <header class="dashboard-header">
             <div class="node-info">
-                <span class="node-status">Active Intelligence Node Established</span>
+                <span class="node-status">Active Intelligence Node</span>
                 <h2 id="active-id">RELIANCE.NS</h2>
             </div>
             <div class="price-display">
@@ -71,10 +70,9 @@
                 </div>
             </div>
 
-            <!-- RIGHT PANEL: Performance Visualization (Spotlight Effect) -->
             <div class="glow-card chart-card">
-                <div class="card-content" style="flex:1; display:flex; flex-direction:column;">
-                    <span class="section-title">30D Historical Performance Map</span>
+                <div class="card-content" style="height:100%; display:flex; flex-direction:column;">
+                    <span class="section-title">Market Analysis (30D)</span>
                     <div class="chart-container">
                         <canvas id="market-chart"></canvas>
                     </div>
@@ -83,10 +81,10 @@
 
         </div>
 
-        <!-- SYNC INDICATOR -->
+        <!-- REFRESH STATUS -->
         <div class="refresh-indicator">
             <div class="pulse-dot"></div>
-            Neural Link: Active (60s Refresh)
+            Sync in: <span id="countdown">60</span>s
         </div>
     </div>
 

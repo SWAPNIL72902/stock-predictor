@@ -187,18 +187,39 @@ function initSpotlight() {
     });
 }
 
+// --- REFRESH: Countdown Logic ---
+let secondsRemaining = 60;
+function startCountdown() {
+    const el = document.getElementById('countdown');
+    if (!el) return;
+    
+    clearInterval(window.countdownTimer);
+    secondsRemaining = 60;
+    el.textContent = secondsRemaining;
+
+    window.countdownTimer = setInterval(() => {
+        secondsRemaining--;
+        el.textContent = secondsRemaining;
+        if (secondsRemaining <= 0) {
+            fetchStockData();
+        }
+    }, 1000);
+}
+
 // Lifecycle Init
 document.addEventListener('DOMContentLoaded', () => {
     initBackground();
     initSpotlight();
     fetchStockData();
+    startCountdown();
 
     const searchForm = document.getElementById('search-form');
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const val = document.getElementById('search-input').value.trim();
-        if (val) fetchStockData(val.toUpperCase());
+        if (val) {
+            fetchStockData(val.toUpperCase());
+            startCountdown(); // Reset timer on manual search
+        }
     });
-
-    setInterval(() => fetchStockData(), 60000);
 });

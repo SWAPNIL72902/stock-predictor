@@ -6,36 +6,90 @@
     <title>Login | Terminal.AI</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .split-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+        .info-pane {
+            flex: 1.2;
+            background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 60%),
+                        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.1), transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .form-pane {
+            flex: 1;
+            background: #030712;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-left: 1px solid var(--glass-border);
+        }
+        .branding h1 { font-size: 3.5rem; font-weight: 900; letter-spacing: -2px; color: var(--primary); margin-bottom: 1rem; }
+        .branding p { font-size: 1.25rem; color: var(--text-muted); max-width: 450px; line-height: 1.6; }
+        
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            background: rgba(17, 24, 39, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+        }
+        .auth-card h2 { font-size: 1.75rem; font-weight: 800; margin-bottom: 2rem; }
+
+        @media (max-width: 1024px) {
+            .info-pane { display: none; }
+            .form-pane { border: none; }
+        }
+    </style>
 </head>
 <body>
-    <div class="auth-page">
-        <div class="glass-card auth-card">
-            <div class="auth-header">
-                <h1 style="color: var(--primary); font-weight: 900; letter-spacing: -1px;">Terminal.AI</h1>
-                <p style="color: var(--text-muted); font-size: 0.875rem;">Enter your secure identity to access the terminal.</p>
+    <canvas id="bg-canvas"></canvas>
+    
+    <div class="split-layout">
+        <div class="info-pane">
+            <div class="branding">
+                <h1>Terminal.AI</h1>
+                <p>Advanced neural-link stock intelligence platform. Establish connection to your predictive nodes.</p>
             </div>
+        </div>
+        
+        <div class="form-pane">
+            <div class="auth-card fade-in">
+                <h2>Access Terminal</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Identity ID</label>
+                        <input type="text" name="username" class="form-input" placeholder="Desired Username" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Establish Security Key</label>
+                        <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;">
+                        Access Dashboard
+                    </button>
+                </form>
 
-            <form id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">Identity ID</label>
-                    <input type="text" name="username" class="form-input" placeholder="Desired Username" required autofocus>
+                <div style="margin-top: 2rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <a href="./signup.html" style="color: var(--primary); text-decoration: none; font-weight: 700;">Establish Connection</a>
+                    <a href="#" style="color: var(--text-muted); text-decoration: none;">Node Recovery</a>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Establish Security Key</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    Access Dashboard
-                </button>
-            </form>
-
-            <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem; color: var(--text-muted);">
-                Unauthorized node? <a href="./signup.html" style="color: var(--primary); text-decoration: none; font-weight: 700;">Establish Connection</a>
-            </p>
+            </div>
         </div>
     </div>
+
     <script src="./script.js"></script>
 </body>
 </html>
