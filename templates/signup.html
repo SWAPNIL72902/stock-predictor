@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup | Global Intelligence Terminal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        #globe-canvas {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.3));
+        }
+
+        .globe-overlay {
+            position: absolute;
+            pointer-events: none;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-wrapper">
+        <!-- Globe Visual Section (Secondary Theme) -->
+        <div class="auth-visual" style="background: radial-gradient(circle at 70% 30%, #2e1065 0%, #030303 100%);">
+            <div class="globe-container">
+                <canvas id="globe-canvas"></canvas>
+                <!-- Pulsing Nodes (Simulated Data Points) -->
+                <div class="globe-node"
+                    style="top: 25%; left: 55%; background: var(--secondary); box-shadow: 0 0 15px var(--secondary);">
+                </div>
+                <div class="globe-node"
+                    style="top: 45%; left: 35%; background: var(--secondary); box-shadow: 0 0 15px var(--secondary); animation-delay: 0.7s;">
+                </div>
+                <div class="globe-node"
+                    style="top: 60%; left: 50%; background: var(--secondary); box-shadow: 0 0 15px var(--secondary); animation-delay: 1.4s;">
+                </div>
+
+                <div class="globe-overlay">
+                    <h2
+                        style="font-size: 2.5rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 0.5rem; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                        Network Establishment</h2>
+                    <p
+                        style="color: var(--secondary); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;">
+                        Securing Neural Node Connection</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Form Section -->
+        <div class="auth-container">
+            <div class="card auth-card">
+                <div class="logo" style="margin-bottom: 2rem; justify-content: center;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)"
+                        stroke-width="3">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
+                    Terminal.AI
+                </div>
+
+                <h1
+                    style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; text-align: center; color: white;">
+                    New Connection</h1>
+                <p style="text-align: center; color: var(--text-muted); margin-bottom: 2.5rem; font-size: 0.875rem;">
+                    Create your secure terminal identity.</p>
+
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label class="form-label">Terminal ID</label>
+                        <input type="text" id="username" class="form-input" placeholder="Desired Username" required
+                            autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Establish Password</label>
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                    </div>
+
+                    <button type="submit" id="signup-btn" class="btn btn-primary"
+                        style="margin-top: 1.5rem; background: var(--secondary); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);">Register
+                        Identity</button>
+                </form>
+
+                <div id="alert-box" class="hidden"
+                    style="margin-top: 1.5rem; color: var(--danger); font-size: 0.85rem; text-align: center; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                </div>
+
+                <p style="margin-top: 2.5rem; text-align: center; font-size: 0.875rem; color: var(--text-muted);">
+                    Returning terminal? <a href="/"
+                        style="color: var(--secondary); text-decoration: none; font-weight: 700;">Authorize Existing</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Globe Script (Secondary Theme) -->
+    <script>
+        const canvas = document.getElementById('globe-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+
+        function resize() {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        }
+        window.onresize = resize;
+        resize();
+
+        let rotation = 0;
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.35;
+
+            // Atmosphere Glow (Secondary)
+            const glow = ctx.createRadialGradient(centerX, centerY, radius * 0.8, centerX, centerY, radius * 1.2);
+            glow.addColorStop(0, 'rgba(139, 92, 246, 0.1)');
+            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = glow;
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius * 1.3, 0, Math.PI * 2); ctx.fill();
+
+            // Main Sphere (Secondary)
+            ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2 + rotation;
+                const xRadius = radius * Math.cos(angle);
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, Math.abs(xRadius), radius, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            for (let i = 1; i < 6; i++) {
+                const y = centerY + (i - 3) * (radius * 0.4);
+                const r = Math.sqrt(Math.pow(radius, 2) - Math.pow((i - 3) * (radius * 0.4), 2));
+                ctx.beginPath();
+                ctx.ellipse(centerX, y, r, r * 0.2, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.stroke();
+
+            rotation += 0.0015;
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        // Signup Logic
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('signup-btn');
+            btn.innerHTML = '<span class="spinner"></span> REGISTERING...';
+            btn.disabled = true;
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const res = await fetch('/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.access_token);
+                    window.location.href = '/dashboard';
+                } else {
+                    const alert = document.getElementById('alert-box');
+                    alert.textContent = data.detail || 'Connection Failed';
+                    alert.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.innerHTML = 'Register Identity'; btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

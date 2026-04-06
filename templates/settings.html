@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Settings | StockPredict</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="logo">StockPredict</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="/dashboard" class="nav-link">Dashboard</a></li>
+                <li class="nav-item"><a href="/analytics" class="nav-link">Analytics</a></li>
+                <li class="nav-item"><a href="/settings" class="nav-link active">Settings</a></li>
+            </ul>
+        </aside>
+        <main class="main-content">
+            <header><h2>App Settings</h2></header>
+            <div class="card">
+                <h3 class="card-title">User Account</h3>
+                <p style="color: var(--text-muted);">Manage your personal API keys, alert thresholds, and security preferences.</p>
+            </div>
+            <div class="card" style="margin-top: 2rem;">
+                <h3 class="card-title">Display Preferences</h3>
+                <button id="theme-toggle" class="btn" style="background: var(--sidebar-bg); color: white;">Toggle Dark/Light Mode (Coming Soon)</button>
+            </div>
+        </main>
+    </div>
+    <script>
+        document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+            e.preventDefault(); localStorage.removeItem('token'); window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

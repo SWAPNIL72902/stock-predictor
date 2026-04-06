@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Global Intelligence Terminal</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-globe { position: fixed; bottom: -20vh; right: -10vw; width: 60vh; height: 60vh; z-index: -1; opacity: 0.15; pointer-events: none; filter: blur(5px); }
+        .dashboard { position: relative; z-index: 1; }
+        .main-content { padding-top: 1.5rem; transition: opacity 0.4s ease; }
+        .loader-node { width: 14px; height: 14px; background: var(--primary); border-radius: 50%; animation: nodePulse 1s infinite alternate; margin-bottom: 1rem; box-shadow: 0 0 15px var(--primary-glow); }
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .ui-hidden { opacity: 0; pointer-events: none; transform: translateY(10px); transition: all 0.4s ease; }
+        .ui-visible { opacity: 1; pointer-events: auto; transform: translateY(0); transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    </style>
+</head>
+<body>
+    <!-- Background System -->
+    <div class="bg-container">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <canvas id="globe-bg-canvas" class="dashboard-globe"></canvas>
+    </div>
+
+    <div class="dashboard">
+        <!-- Unified Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Terminal.AI
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="/dashboard" class="nav-link active">Dashboard</a></li>
+                    <li class="nav-item"><a href="/analytics" class="nav-link">Analytics</a></li>
+                    <li class="nav-item"><a href="/settings" class="nav-link">Settings</a></li>
+                    <li class="nav-item" style="margin-top: auto;"><a href="#" id="logout" class="nav-link" style="color: var(--danger); opacity: 0.8;">Disconnect</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Functional Main Content -->
+        <main class="main-content">
+            <header>
+                <div>
+                    <h1 id="app-title" style="font-size: 1.5rem; font-weight: 900; margin-bottom: 0.2rem; color: white; letter-spacing: -0.5px;">AI Stock Intelligence Dashboard</h1>
+                    <div id="refresh-timer" class="refresh-indicator">Neural Link Status: Active (30s)</div>
+                </div>
+                
+                <!-- Wrap in Form for ENTER Key Support -->
+                <form id="predict-form" style="display: flex; gap: 0.75rem;">
+                    <div style="position: relative;">
+                         <input type="text" id="ticker" class="form-input" placeholder="RELIANCE.NS, TSLA, AAPL" value="AAPL" style="width: 260px; font-weight: 700;" autocomplete="off">
+                    </div>
+                    <button type="submit" id="predict-btn" class="btn btn-primary" style="padding: 0.8rem 1.5rem; width: auto; font-size: 0.85rem; min-width: 180px;">
+                        <span id="btn-text">Run Neural Forecast</span>
+                    </button>
+                </form>
+            </header>
+
+            <!-- Institutional Stock Bar -->
+            <div id="stock-bar" class="stock-bar card ui-hidden" style="margin-bottom: 2rem; padding: 1.5rem 2.5rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; gap: 4rem;">
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.75rem; display: block; font-weight: 800; text-transform: uppercase;">Active Node</span>
+                        <span id="active-ticker" class="stock-tag">AAPL</span>
+                    </div>
+                    <div>
+                        <span style="color: var(--text-muted); font-size: 0.75rem; display: block; font-weight: 800; text-transform: uppercase;">Current Price</span>
+                        <span id="last-price" style="font-size: 1.75rem; font-weight: 900; color: white;">$ --.--</span>
+                    </div>
+                </div>
+                <div id="sentiment-summary" style="text-align: right;">
+                    <span style="color: var(--text-muted); font-size: 0.75rem; display: block; font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;">Market Pulse</span>
+                    <span id="sent-label" class="sentiment-badge">Neutral</span>
+                </div>
+            </div>
+
+            <!-- Visualization Grid -->
+            <div id="content-grid" style="display: grid; grid-template-columns: 380px 1fr; gap: 2rem; position: relative;">
+                <!-- Full Searching Overlay -->
+                <div id="search-overlay" class="scanning-overlay hidden">
+                    <div class="loader-node"></div>
+                    <h2 style="font-weight: 900; letter-spacing: 1px; color: white;">SCANNING NEURAL NODES</h2>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">Fusing Technical Model (70%) + Market Sentiment (30%)</p>
+                </div>
+
+                <!-- Left Column -->
+                <div id="data-column" class="ui-hidden" style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div id="result-card" class="card">
+                        <h3 class="card-title">Recommendation Node</h3>
+                        <div id="prediction-data">
+                            <div style="text-align: center; padding: 1.5rem 0;">
+                                <div id="prediction-ui" class="prediction-badge" style="font-size: 2rem; padding: 1rem 3rem;">
+                                    <span id="arrow-icon"></span>
+                                    <span id="badge-text">...</span>
+                                </div>
+                                <div style="text-align: left; margin-top: 2rem;">
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); margin-bottom: 0.5rem;">
+                                        <span>AI CONFIDENCE PROBABILITY</span>
+                                        <span id="confidence-pct">0%</span>
+                                    </div>
+                                    <div class="progress-track"><div id="confidence-bar" class="progress-bar" style="width: 0%"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="news-card" class="card" style="flex: 1;">
+                        <h3 class="card-title">Economic Intelligence Feed</h3>
+                        <div id="news-list"></div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div id="chart-column" class="card ui-hidden" style="display: flex; flex-direction: column;">
+                    <h3 class="card-title">Historical Performance Map (30D)</h3>
+                    <div style="flex: 1; min-height: 500px; position: relative;">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Alerts -->
+            <div id="alert-box" class="hidden" style="margin-top: 2rem; background: rgba(239, 68, 68, 0.1); border-radius: 1rem; border: 1px solid rgba(239, 68, 68, 0.3); padding: 1.5rem; text-align: center; color: #fff; animation: fadeIn 0.4s ease;">
+                <p id="alert-msg" style="font-weight: 700;"></p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Ensure syntax is valid: RELIANCE.NS, TSLA, AAPL</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const bgCanvas = document.getElementById('globe-bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgW, bgH;
+        function rb() { bgW = bgCanvas.width = bgCanvas.offsetWidth; bgH = bgCanvas.height = bgCanvas.offsetHeight; }
+        window.onresize = rb; rb();
+        let r = 0;
+        function renderBg() {
+            bgCtx.clearRect(0,0, bgW, bgH);
+            const cx = bgW/2, cy = bgH/2, rad = Math.min(bgW, bgH) * 0.45;
+            bgCtx.strokeStyle = 'rgba(59, 130, 246, 0.1)'; bgCtx.lineWidth = 1;
+            for(let i=0; i<10; i++) {
+                const a = (i/10)*Math.PI*2 + r; const xr = rad*Math.cos(a);
+                bgCtx.beginPath(); bgCtx.ellipse(cx, cy, Math.abs(xr), rad, 0, 0, Math.PI*2); bgCtx.stroke();
+            }
+            r += 0.001; requestAnimationFrame(renderBg);
+        }
+        renderBg();
+
+        let chart; let refreshInterval; let timeLeft = 30;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) window.location.href = '/';
+            executeAnalysis(); 
+            startAutoRefresh();
+        });
+
+        function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            timeLeft = 30;
+            refreshInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('refresh-timer').textContent = `Neural Link Status: Active (${timeLeft}s)`;
+                if (timeLeft <= 0) { 
+                    executeAnalysis(true); // Background update
+                    timeLeft = 30; 
+                }
+            }, 1000);
+        }
+
+        // --- Core Execution Logic ---
+        async function executeAnalysis(isAuto = false) {
+            const tickerInput = document.getElementById('ticker');
+            const ticker = tickerInput.value.trim().toUpperCase();
+            if (!ticker) return;
+            
+            const btn = document.getElementById('predict-btn');
+            const btnText = document.getElementById('btn-text');
+            
+            // 1. UI Feedback: Full overlay for user searches, silent for auto-refresh
+            if (!isAuto) {
+                btn.disabled = true;
+                btnText.innerHTML = `<span class="spinner" style="width:16px; height:16px;"></span> SYNCING...`;
+                tickerInput.blur();
+                hideResults(); // Only hide on manual search
+                document.getElementById('search-overlay').classList.remove('hidden');
+                document.getElementById('alert-box').classList.add('hidden');
+            }
+
+            try {
+                // 2. Parallel Async Fetching
+                const [predData, chartData] = await Promise.all([
+                    fetchPrediction(ticker),
+                    fetchChartData(ticker)
+                ]);
+
+                // 3. Update UI Components if data arrived
+                if (predData) updatePredictionUI(predData);
+                if (chartData) updateChartUI(chartData);
+                
+                // 4. Verification Check
+                if (!predData && !chartData && !isAuto) {
+                    showError("Inference Node Error: Data streams currently offline.");
+                }
+            } catch (err) {
+                console.error("Global Neural Sync Error", err);
+                if (!isAuto) showError("Neural Node Sync Failure: Protocol Error.");
+            } finally {
+                // 5. Restore UI Visibility (CRITICAL FIX for Black Screen)
+                document.getElementById('search-overlay').classList.add('hidden');
+                showResults(); // Ensure visibility is restored
+                btn.disabled = false;
+                btnText.innerHTML = 'Run Neural Forecast';
+            }
+        }
+
+        function hideResults() {
+            const elements = ['stock-bar', 'data-column', 'chart-column'];
+            elements.forEach(id => {
+                document.getElementById(id).classList.remove('ui-visible');
+                document.getElementById(id).classList.add('ui-hidden');
+            });
+        }
+
+        function showResults() {
+            const elements = ['stock-bar', 'data-column', 'chart-column'];
+            elements.forEach((id, index) => {
+                setTimeout(() => {
+                    document.getElementById(id).classList.remove('ui-hidden');
+                    document.getElementById(id).classList.add('ui-visible');
+                }, index * 100); // Staggered fade
+            });
+        }
+
+        function showError(msg) {
+            document.getElementById('search-overlay').classList.add('hidden');
+            const ab = document.getElementById('alert-box');
+            document.getElementById('alert-msg').textContent = msg;
+            ab.classList.remove('hidden');
+        }
+
+        async function fetchPrediction(ticker) {
+            try {
+                const res = await fetch(`/predict?ticker=${ticker}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                
+                if (res.status === 401) { window.location.href = '/'; return null; }
+                const data = await res.json();
+                if (!res.ok) { showError(data.detail || "Analysis Error"); return null; }
+                return data;
+            } catch (err) { return null; }
+        }
+
+        async function fetchChartData(ticker) {
+            try {
+                const res = await fetch(`/stock-data?ticker=${ticker}`);
+                const data = await res.json();
+                if (!res.ok) return null;
+                return data;
+            } catch (err) { return null; }
+        }
+
+        function updatePredictionUI(data) {
+            document.getElementById('active-ticker').textContent = data.ticker;
+            document.getElementById('badge-text').textContent = data.prediction;
+            const ui = document.getElementById('prediction-ui');
+            const icon = document.getElementById('arrow-icon');
+            
+            if (data.prediction === 'UP') {
+                ui.className = 'prediction-badge badge-up';
+                icon.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"></polyline></svg>`;
+            } else {
+                ui.className = 'prediction-badge badge-down';
+                icon.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+            }
+
+            const cv = (data.confidence * 100).toFixed(1);
+            document.getElementById('confidence-pct').textContent = cv + "%";
+            document.getElementById('confidence-bar').style.width = cv + "%";
+
+            const sl = document.getElementById('sent-label');
+            const l = data.sentiment_label || 'Neutral';
+            sl.textContent = l;
+            sl.className = `sentiment-badge ${l === 'Positive' ? 'sent-pos' : l === 'Negative' ? 'sent-neg' : 'sent-neu'}`;
+
+            const nl = document.getElementById('news-list');
+            nl.innerHTML = '';
+            if (data.news && data.news.length > 0) {
+                data.news.forEach(art => {
+                    const item = document.createElement('div');
+                    item.className = 'news-item';
+                    item.innerHTML = `<div class="news-title">${art.title}</div><div class="news-meta"><span>${art.source}</span><span class="sentiment-badge ${art.sentiment_label === 'Positive' ? 'sent-pos' : art.sentiment_label === 'Negative' ? 'sent-neg' : 'sent-neu'}" style="font-size:0.6rem;">${art.sentiment_label}</span></div>`;
+                    nl.appendChild(item);
+                });
+            } else {
+                nl.innerHTML = '<p style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:1.5rem;">Neural Filter: No major reports for this node.</p>';
+            }
+        }
+
+        function updateChartUI(data) {
+            document.getElementById('last-price').textContent = `${data.currency} ${data.last_price}`;
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            if (chart) chart.destroy();
+
+            const grad = ctx.createLinearGradient(0, 0, 0, 500);
+            grad.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates.map(d => d.split('-').slice(1).join('/')),
+                    datasets: [{ data: data.prices, borderColor: '#3b82f6', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 4, pointRadius: 0, pointHoverRadius: 6 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: '#101014', titleColor: '#fff', bodyColor: '#94a3b8', padding: 12, displayColors: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', callback: (v) => data.currency + v.toLocaleString() } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('predict-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            executeAnalysis();
+        });
+
+        document.getElementById('logout').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        });
+
+    </script>
+</body>
+</html>
