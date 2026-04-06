@@ -1,5 +1,4 @@
-fastapi
-uvicorn
+flask
 yfinance
 pandas
 numpy
@@ -12,4 +11,3 @@ sqlalchemy
 jinja2
 requests
 textblob
-
