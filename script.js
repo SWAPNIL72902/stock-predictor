@@ -48,34 +48,59 @@ function initBackground() {
 
 // --- CORE: Search & Data ---
 async function fetchStockData(ticker = currentTicker) {
+    // Sanitize ticker: uppercase and fix common typos
+    ticker = ticker.trim().toUpperCase().replace("RELAINCE", "RELIANCE");
     currentTicker = ticker;
+    
     document.getElementById('active-id').textContent = ticker;
     document.getElementById('live-price').textContent = "Updating...";
 
-    const proxyUrl = "https://api.allorigins.win/raw?url=";
-    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1mo&interval=1d`;
-    const finalUrl = `${proxyUrl}${encodeURIComponent(targetUrl)}`;
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1mo&interval=1d`;
+    
+    // Primary and Secondary Proxies to handle potential downtime/rate-limiting
+    const proxies = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
+        `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`
+    ];
 
-    try {
-        const response = await fetch(finalUrl);
-        if (!response.ok) throw new Error("API Connection Failed");
-        
-        const data = await response.json();
-        const res = data.chart.result[0];
-        const quote = res.indicators.quote[0];
-        const prices = quote.close;
-        const currentPrice = prices[prices.length - 1];
-        const currency = res.meta.currency;
+    let success = false;
+    for (const url of proxies) {
+        if (success) break;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) continue;
+            
+            const data = await response.json();
+            if (!data.chart || !data.chart.result || !data.chart.result[0]) {
+                console.error("Malformed data for:", ticker);
+                continue;
+            }
 
-        // UI Updates
-        const symbol = currency === 'INR' ? '₹' : '$';
-        document.getElementById('live-price').textContent = `${symbol} ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        
-        updateChart(res.timestamp, prices);
-        updatePrediction(ticker);
-    } catch (err) {
-        console.error(err);
+            const res = data.chart.result[0];
+            const quote = res.indicators.quote[0];
+            const prices = quote.close ? quote.close.filter(p => p !== null) : [];
+            
+            if (prices.length === 0) throw new Error("Empty Price Stream");
+
+            const timestamps = res.timestamp ? res.timestamp.slice(-prices.length) : [];
+            const currentPrice = prices[prices.length - 1];
+            const currency = res.meta.currency || (ticker.endsWith(".NS") ? "INR" : "USD");
+
+            // UI Updates
+            const symbol = currency === "INR" ? "₹" : "$";
+            document.getElementById('live-price').textContent = `${symbol} ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            
+            updateChart(timestamps, prices);
+            updatePrediction(ticker);
+            success = true;
+        } catch (err) {
+            console.warn(`Proxy failed: ${url}`, err);
+        }
+    }
+
+    if (!success) {
         document.getElementById('live-price').textContent = "Connection Lost";
+        // Attempt to show what we have if chart already exists
     }
 }
 
