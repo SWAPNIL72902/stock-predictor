@@ -3,82 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Terminal.AI</title>
+    <title>AI Stock Intelligence | Dashboard</title>
+    
+    <!-- Stable Frontend Assets -->
     <link rel="stylesheet" href="./style.css">
+    
+    <!-- Dependencies -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-    <div class="container" style="flex: 1;">
-        <div class="dashboard-header">
-            <h1 style="color: var(--primary); font-weight: 900; letter-spacing: -1px;">Terminal.AI</h1>
-            <button id="logoutBtn" class="btn" style="width: auto; padding: 0.5rem 1rem; color: var(--neon-red); background: transparent;">Logout</button>
-        </div>
+    <!-- Premium Animated Background (CSS Only) -->
+    <div class="bg-animate">
+        <div class="bg-pattern"></div>
+        <div class="bg-glow glow-1"></div>
+        <div class="bg-glow glow-2"></div>
+    </div>
 
-        <header>
-            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem;">AI Stock Intelligence Dashboard</h2>
-            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem;">Real-time prediction + neural sentiment analysis</p>
-            
-            <form id="predictForm" class="ticker-form glass-card">
-                <input type="text" id="tickerInput" class="form-input ticker-input" placeholder="Stock Ticker (e.g. AAPL)" value="AAPL" required autocomplete="off">
-                <button type="submit" id="predictBtn" class="btn btn-primary predict-btn">
-                    <span id="btnText">Run Neural Forecast</span>
-                </button>
-            </form>
+    <div class="container">
+        <!-- HEADER: Node Identification & Live Price -->
+        <header class="dashboard-header">
+            <div class="node-info">
+                <span class="node-status">Active Intelligence Node</span>
+                <h2>RELIANCE.NS</h2>
+            </div>
+            <div class="price-display">
+                <span class="price-label">Current Live Price</span>
+                <div id="live-price" class="price-value">Loading Node...</div>
+            </div>
         </header>
 
-        <!-- Loader -->
-        <div id="loader" class="loader-container hidden">
-            <div class="spinner"></div>
-            <p style="color: var(--text-muted); font-size: 0.875rem; font-weight: 800; letter-spacing: 2px;">SCANNING NEURAL NODES...</p>
-        </div>
-
-        <!-- Dashboard Result Section -->
-        <div id="resultsArea" class="hidden">
-            <div class="glass-card" style="margin-bottom: 2rem; display: flex; justify-content: space-between; padding: 1.5rem 2.5rem;">
-                <div>
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Active Node</span>
-                    <h2 id="activeTicker" style="font-size: 2rem; font-weight: 900;">AAPL</h2>
-                </div>
-                <div style="text-align: right;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Current Live price</span>
-                    <h2 style="font-size: 2rem; font-weight: 900;">$ --.--</h2>
-                </div>
-            </div>
-
-            <div class="results-grid">
-                <!-- Insight Card -->
-                <div>
-                    <div class="glass-card" style="margin-bottom: 1.5rem;">
-                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Neural recommendation</span>
-                        <div id="predictionValue" class="prediction-val">UP</div>
-                        
-                        <div style="margin-top: 1.5rem;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem;">
-                                <span>AI INFERENCE CONFIDENCE</span>
-                                <span id="confPct">0%</span>
-                            </div>
-                            <div class="confidence-track"><div id="confBar" class="confidence-bar" style="width: 0%"></div></div>
+        <!-- MAIN DASHBOARD GRID -->
+        <div class="dashboard-grid">
+            
+            <!-- LEFT PANEL: Prediction & Insights -->
+            <div class="panel-left">
+                <!-- Neural Recommendation Tier -->
+                <div class="glass-card recommendation-area">
+                    <span class="section-title">Neural Recommendation</span>
+                    <div class="prediction-val val-up">VAL-UP</div>
+                    
+                    <div style="margin-top: 1.5rem; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem;">
+                            <span>AI INFERENCE CONFIDENCE</span>
+                            <span id="conf-pct">89.4%</span>
+                        </div>
+                        <div class="confidence-track">
+                            <div class="confidence-bar" style="width: 89.4%"></div>
                         </div>
                     </div>
-
-                    <div class="glass-card">
-                        <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 1rem;">Intelligence list</span>
-                        <div id="newsList"></div>
-                    </div>
                 </div>
 
-                <!-- Simulation/Chart Area -->
-                <div class="glass-card" style="display: flex; flex-direction: column; min-height: 400px;">
-                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 1.5rem; display: block;">30D Historical Performance Map</span>
-                    <div style="flex: 1; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--glass-border); border-radius: 1rem;">
-                        <p style="color: var(--text-muted); text-align: center; font-size: 0.875rem;">Terminal.AI Visualizing Stream...</p>
+                <!-- Intelligence List -->
+                <div class="glass-card">
+                    <span class="section-title">Intelligence Feed</span>
+                    <div class="news-item">
+                        <span class="news-title">Institutional Accumulation Detected in RELIANCE Node</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+                            <span>Global Intelligence</span>
+                            <span style="color: var(--neon-green); font-weight: 700;">Positive</span>
+                        </div>
+                    </div>
+                    <div class="news-item">
+                        <span class="news-title">Expansion into Neural Telecom Sector Confirmed</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+                            <span>Business Intelligence</span>
+                            <span style="color: var(--neon-green); font-weight: 700;">Positive</span>
+                        </div>
+                    </div>
+                    <div class="news-item">
+                        <span class="news-title">Whale Transaction Movement for Ticker RELIANCE.NS</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted);">
+                            <span>Market Delta</span>
+                            <span style="color: var(--text-muted); font-weight: 700;">Neutral</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- RIGHT PANEL: Performance Visualization -->
+            <div class="glass-card chart-card">
+                <span class="section-title">30D Historical Performance Map</span>
+                <div class="chart-container">
+                    <canvas id="market-chart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sync Indicator -->
+        <div class="refresh-indicator">
+            <div class="pulse-dot"></div>
+            Neural Link Status: Active (60s Refresh)
         </div>
     </div>
+
+    <!-- Core Driver -->
     <script src="./script.js"></script>
 </body>
 </html>

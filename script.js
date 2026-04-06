@@ -1,128 +1,121 @@
-const DB = {
-    login: (u, p) => {
-        if (u && p) {
-            localStorage.setItem('currentUser', u);
-            return true;
-        }
-        return false;
-    },
-    signup: (u, p) => {
-        if (u && p) {
-            localStorage.setItem('currentUser', u);
-            return true;
-        }
-        return false;
-    },
-    logout: () => {
-        localStorage.removeItem('currentUser');
-        window.location.href = './index.html';
-    },
-    checkAuth: () => {
-        const user = localStorage.getItem('currentUser');
-        const isAuthPage = window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/') || window.location.pathname.endsWith('signup.html');
-        
-        if (!user && !isAuthPage) {
-            window.location.href = './index.html';
-        } else if (user && isAuthPage) {
-            window.location.href = './dashboard.html';
-        }
-    }
-};
+/**
+ * Terminal.AI Core Logic
+ * Handles real-time market data extraction, Chart.js rendering, and auto-refresh.
+ */
 
-// --- Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
-    DB.checkAuth();
+let marketChart = null;
+const TICKER = "RELIANCE.NS";
+const TICKER_NAME = "RELIANCE.NS";
 
-    // Login Handling
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const u = e.target.username.value;
-            const p = e.target.password.value;
-            if (DB.login(u, p)) window.location.href = './dashboard.html';
-        });
-    }
-
-    // Signup Handling
-    const signupForm = document.getElementById('signupForm');
-    if (signupForm) {
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const u = e.target.username.value;
-            const p = e.target.password.value;
-            if (DB.signup(u, p)) window.location.href = './dashboard.html';
-        });
-    }
-
-    // Dashboard Handling
-    const predictForm = document.getElementById('predictForm');
-    if (predictForm) {
-        predictForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            runPrediction();
-        });
-        
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) logoutBtn.addEventListener('click', DB.logout);
-    }
-});
-
-// --- Dashboard Logic (Simulated) ---
-async function runPrediction() {
-    const input = document.getElementById('tickerInput');
-    const ticker = input.value.trim().toUpperCase();
-    if (!ticker) return;
-
-    const loader = document.getElementById('loader');
-    const results = document.getElementById('resultsArea');
-    const btn = document.getElementById('predictBtn');
-    const btnText = document.getElementById('btnText');
-
-    // Enter Loading State
-    btn.disabled = true;
-    btnText.textContent = 'Analysing Neural Nodes...';
-    results.classList.add('hidden');
-    loader.classList.remove('hidden');
+async function fetchStockData() {
+    console.log(`[Terminal.AI] Node Syncing: ${TICKER}...`);
+    
+    // Yahoo Finance URL via AllOrigins proxy to bypass CORS
+    const proxyUrl = "https://api.allorigins.win/raw?url=";
+    const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${TICKER}?range=1mo&interval=1d`;
+    const finalUrl = `${proxyUrl}${encodeURIComponent(targetUrl)}`;
 
     try {
-        // Simulate API Delay
-        await new Promise(r => setTimeout(r, 1500));
-
-        // Mock data
-        const isUp = Math.random() > 0.5;
-        const confidence = (Math.random() * 20 + 75).toFixed(1);
+        const response = await fetch(finalUrl);
+        if (!response.ok) throw new Error("CORS Protocol Failed");
         
-        updateUI(ticker, isUp, confidence);
+        const data = await response.json();
+        const result = data.chart.result[0];
+        
+        // 1. Extract Metadata
+        const quote = result.indicators.quote[0];
+        const timestamps = result.timestamp;
+        const prices = quote.close;
+        const currentPrice = prices[prices.length - 1];
+        const currency = result.meta.currency;
 
-        loader.classList.add('hidden');
-        results.classList.remove('hidden');
+        // 2. Update Header Price
+        updateHeaderPrice(currentPrice, currency);
+
+        // 3. Update Chart
+        updateChart(timestamps, prices);
+
+        console.log(`[Terminal.AI] Node Refreshed. Current: ${currentPrice} ${currency}`);
     } catch (err) {
-        console.error(err);
-    } finally {
-        btn.disabled = false;
-        btnText.textContent = 'Run Neural Forecast';
+        console.error("[Terminal.AI] Sync Error:", err);
+        document.getElementById('live-price').textContent = "Data unavailable";
     }
 }
 
-function updateUI(ticker, isUp, confidence) {
-    document.getElementById('activeTicker').textContent = ticker;
-    const predEl = document.getElementById('predictionValue');
-    predEl.textContent = isUp ? 'VAL-UP ' : 'VAL-DOWN';
-    predEl.className = `prediction-val ${isUp ? 'val-up' : 'val-down'}`;
-
-    document.getElementById('confPct').textContent = `${confidence}%`;
-    document.getElementById('confBar').style.width = `${confidence}%`;
-
-    const newsList = document.getElementById('newsList');
-    newsList.innerHTML = `
-        <div class="news-item">
-            <span class="news-title">Institutional Accumulation Detected in ${ticker} Node</span>
-            <div class="news-meta">Global Intelligence Feed • High Impact</div>
-        </div>
-        <div class="news-item">
-            <span class="news-title">Whale Transaction Movement for ${ticker} Establish Connection</span>
-            <div class="news-meta">Node Delta • Medium Impact</div>
-        </div>
-    `;
+function updateHeaderPrice(price, currency) {
+    const el = document.getElementById('live-price');
+    const symbol = currency === 'INR' ? '₹' : '$';
+    el.textContent = `${symbol} ${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+function updateChart(timestamps, prices) {
+    const ctx = document.getElementById('market-chart').getContext('2d');
+    
+    // Prepare Labels (Convert timestamps to Dates)
+    const labels = timestamps.map(ts => {
+        const d = new Date(ts * 1000);
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    });
+
+    if (marketChart) marketChart.destroy();
+
+    // Chart Gradient Styling
+    const gradient = ctx.createLinearGradient(0, 0, 0, 450);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(15, 23, 42, 0)');
+
+    marketChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Market Price',
+                data: prices,
+                borderColor: '#3b82f6',
+                borderWidth: 4,
+                tension: 0.4, // Smooth curve
+                pointRadius: 0, // Clean look
+                pointHoverRadius: 6,
+                fill: true,
+                backgroundColor: gradient
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#fff',
+                    bodyColor: '#94a3b8',
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return `Price: ${context.parsed.y.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                },
+                y: {
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+// Initial Sync + Auto-Refresh Protocol
+document.addEventListener('DOMContentLoaded', () => {
+    fetchStockData();
+    
+    // Refresh every 60 seconds
+    setInterval(fetchStockData, 60000);
+});
