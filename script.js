@@ -206,20 +206,89 @@ function startCountdown() {
     }, 1000);
 }
 
+// --- AUTH: Simulated Logic ---
+const DB = {
+    login: (u, p) => {
+        if (u && p) {
+            localStorage.setItem('currentUser', u);
+            return true;
+        }
+        return false;
+    },
+    signup: (u, p) => {
+        if (u && p) {
+            localStorage.setItem('currentUser', u);
+            return true;
+        }
+        return false;
+    },
+    logout: () => {
+        localStorage.removeItem('currentUser');
+        window.location.href = './index.html';
+    },
+    checkAuth: () => {
+        const user = localStorage.getItem('currentUser');
+        const path = window.location.pathname;
+        const isAuthPage = path.endsWith('index.html') || path.endsWith('/') || path.endsWith('signup.html');
+        
+        if (!user && !isAuthPage) {
+            window.location.href = './index.html';
+        } else if (user && isAuthPage) {
+            window.location.href = './dashboard.html';
+        }
+    }
+};
+
 // Lifecycle Init
 document.addEventListener('DOMContentLoaded', () => {
+    DB.checkAuth();
     initBackground();
     initSpotlight();
-    fetchStockData();
-    startCountdown();
 
-    const searchForm = document.getElementById('search-form');
-    searchForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const val = document.getElementById('search-input').value.trim();
-        if (val) {
-            fetchStockData(val.toUpperCase());
-            startCountdown(); // Reset timer on manual search
+    // Check if we are on Dashboard
+    const tickerEl = document.getElementById('active-id');
+    if (tickerEl) {
+        fetchStockData();
+        startCountdown();
+        
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            DB.logout();
+        });
+
+        const searchForm = document.getElementById('search-form');
+        if (searchForm) {
+            searchForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const val = document.getElementById('search-input').value.trim();
+                if (val) {
+                    fetchStockData(val.toUpperCase());
+                    startCountdown();
+                }
+            });
         }
-    });
+    }
+
+    // Check if we are on Login
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (DB.login(e.target.username.value, e.target.password.value)) {
+                window.location.href = './dashboard.html';
+            }
+        });
+    }
+
+    // Check if we are on Signup
+    const signupForm = document.getElementById('signupForm');
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (DB.signup(e.target.username.value, e.target.password.value)) {
+                window.location.href = './dashboard.html';
+            }
+        });
+    }
 });
