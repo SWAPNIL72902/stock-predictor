@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | StockPredict SaaS</title>
-    <link rel="stylesheet" href="style.css">
+
+    <!-- ✅ FIX -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,174 +15,50 @@
 </head>
 <body>
     <div class="dashboard">
-        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                StockPredict
-            </div>
+            <div class="logo">StockPredict</div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="#" class="nav-link active">Dashboard</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Market Overview</a></li>
-                <li class="nav-item"><a href="#" class="nav-link">Watchlist</a></li>
             </ul>
             <div class="sidebar-footer">
                 <a href="#" id="logout-btn" class="nav-link">Logout</a>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
-            <header class="header">
+            <header>
                 <h2>Overview</h2>
-                <div id="user-display" style="font-weight: 500;"></div>
             </header>
 
-            <!-- Search Area -->
             <div class="card" style="margin-bottom: 2rem;">
-                <div class="grid" style="align-items: end; grid-template-columns: 1fr auto;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label for="ticker">Stock Ticker Symbol</label>
-                        <input type="text" id="ticker" class="form-input" placeholder="e.g. AAPL, TSLA, RELIANCE.NS" value="AAPL">
-                    </div>
-                    <button id="predict-btn" class="btn btn-primary" style="width: auto; padding: 0.75rem 2.5rem;">
-                        <span id="spinner" class="spinner hidden"></span>
-                        Analyze & Predict
-                    </button>
-                </div>
+                <input type="text" id="ticker" class="form-input" placeholder="e.g. AAPL">
+                <button id="predict-btn" class="btn btn-primary">Predict</button>
             </div>
 
-            <!-- Dashboard Grid -->
-            <div class="grid">
-                <!-- Prediction Result Card -->
-                <div id="result-card" class="card hidden">
-                    <h3 class="card-title">Prediction for Tomorrow</h3>
-                    <div class="prediction-display">
-                        <div id="badge" class="result-badge">---</div>
-                        <div>
-                            <span id="confidence-val" class="confidence-val">--</span>
-                            <span class="confidence-val" style="font-size: 1.5rem">%</span>
-                        </div>
-                        <p class="confidence-label">Model Confidence Score</p>
-                        <p id="ticker-label" style="margin-top: 1rem; font-weight: 600; color: var(--text-muted);"></p>
-                    </div>
-                </div>
-
-                <!-- Technical Chart Card -->
-                <div class="card" style="grid-column: span 1.5;">
-                    <h3 class="card-title">Stock Price Trend (Last 30 Days)</h3>
-                    <div id="chart-container">
-                        <canvas id="stockChart"></canvas>
-                    </div>
-                </div>
+            <div id="result-card" class="card hidden">
+                <h3>Prediction</h3>
+                <div id="badge"></div>
+                <div id="confidence-val"></div>
             </div>
 
+            <canvas id="stockChart"></canvas>
             <div id="alert-box" class="alert alert-error hidden"></div>
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <!-- ✅ FIX -->
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
     <script>
-        // Check Auth
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'login.html';
-            }
-            
-            // Initial Chart Load
-            updateChart('AAPL');
+            if (!token) window.location.href = '/';
         });
 
-        document.getElementById('logout-btn').addEventListener('click', (e) => {
-            e.preventDefault();
+        document.getElementById('logout-btn').addEventListener('click', () => {
             localStorage.removeItem('token');
-            window.location.href = 'login.html';
+            window.location.href = '/';
         });
-
-        document.getElementById('predict-btn').addEventListener('click', async () => {
-            const ticker = document.getElementById('ticker').value.toUpperCase();
-            if (!ticker) return;
-
-            const btn = document.getElementById('predict-btn');
-            const spinner = document.getElementById('spinner');
-            const alertBox = document.getElementById('alert-box');
-            const resultCard = document.getElementById('result-card');
-            
-            const token = localStorage.getItem('token');
-            
-            btn.disabled = true;
-            spinner.classList.remove('hidden');
-            alertBox.classList.add('hidden');
-            resultCard.classList.add('hidden');
-
-            try {
-                const data = await predictStock(ticker);
-                
-                if (data) {
-                    // Update UI
-                    document.getElementById('confidence-val').textContent = (data.confidence * 100).toFixed(1);
-                    document.getElementById('ticker-label').textContent = `Asset: ${data.ticker}`;
-                    
-                    const badge = document.getElementById('badge');
-                    badge.textContent = data.prediction;
-                    badge.className = 'result-badge ' + (data.prediction === 'UP' ? 'badge-up' : 'badge-down');
-                    
-                    resultCard.classList.remove('hidden');
-                    updateChart(ticker);
-                }
-            } catch (err) {
-                alertBox.textContent = err.message;
-                alertBox.classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                spinner.classList.add('hidden');
-            }
-        });
-
-        let chart;
-        async function updateChart(ticker) {
-            const ctx = document.getElementById('stockChart').getContext('2d');
-            
-            // In a real app, you'd fetch history from the backend. 
-            // For this demo, let's generate mock historical data since /predict only returns latest.
-            const labels = Array.from({length: 30}, (_, i) => `Day ${i+1}`);
-            const basePrice = Math.random() * 200 + 50;
-            const dataValues = Array.from({length: 30}, (_, i) => basePrice + (Math.random() - 0.5) * 5 * i);
-
-            if (chart) chart.destroy();
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${ticker} Price Trend`,
-                        data: dataValues,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: {
-                            grid: { color: 'rgba(226, 232, 240, 0.5)' },
-                            ticks: { font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
     </script>
 </body>
 </html>

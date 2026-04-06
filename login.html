@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | StockPredict SaaS</title>
-    <link rel="stylesheet" href="style.css">
+
+    <!-- ✅ FIX -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -35,12 +38,14 @@
             </form>
             
             <div class="auth-footer">
-                Don't have an account? <a href="signup.html">Create one</a>
+                Don't have an account? <a href="/signup">Create one</a>
             </div>
         </div>
     </div>
     
-    <script src="app.js"></script>
+    <!-- ✅ FIX -->
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+
     <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -51,14 +56,13 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            // Show loading
             btn.disabled = true;
             spinner.classList.remove('hidden');
             alertBox.classList.add('hidden');
             
             try {
                 await loginUser(username, password);
-                window.location.href = 'dashboard.html';
+                window.location.href = '/dashboard';  // ✅ FIX
             } catch (err) {
                 alertBox.textContent = err.message;
                 alertBox.classList.remove('hidden');
