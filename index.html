@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup | Terminal.AI</title>
+    <title>Login | Terminal.AI</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,12 +14,12 @@
         <div class="glass-card auth-card">
             <div class="auth-header">
                 <h1 style="color: var(--primary); font-weight: 900; letter-spacing: -1px;">Terminal.AI</h1>
-                <p style="color: var(--text-muted); font-size: 0.875rem;">Join the next generation of neural stock analysis.</p>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Enter your secure identity to access the terminal.</p>
             </div>
 
-            <form id="signupForm">
+            <form id="loginForm">
                 <div class="form-group">
-                    <label class="form-label">Desired Identity ID</label>
+                    <label class="form-label">Identity ID</label>
                     <input type="text" name="username" class="form-input" placeholder="Desired Username" required autofocus>
                 </div>
                 <div class="form-group">
@@ -27,12 +27,12 @@
                     <input type="password" name="password" class="form-input" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    Create Identity Node
+                    Access Dashboard
                 </button>
             </form>
 
             <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem; color: var(--text-muted);">
-                Returning identity? <a href="./index.html" style="color: var(--primary); text-decoration: none; font-weight: 700;">Sign in</a>
+                Unauthorized node? <a href="./signup.html" style="color: var(--primary); text-decoration: none; font-weight: 700;">Establish Connection</a>
             </p>
         </div>
     </div>
