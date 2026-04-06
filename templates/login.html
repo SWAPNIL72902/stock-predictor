@@ -3,172 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Global Intelligence Terminal</title>
+    <title>Login | Terminal.AI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        #globe-canvas { width: 100%; height: 100%; cursor: grab; filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3)); }
-        .globe-overlay {
-            position: absolute; pointer-events: none; text-align: center;
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-        }
-    </style>
 </head>
 <body>
-    <div class="auth-wrapper">
-        <!-- Globe Visual Section -->
-        <div class="auth-visual">
-            <div class="globe-container">
-                <canvas id="globe-canvas"></canvas>
-                <!-- Pulsing Nodes (Simulated Data Points) -->
-                <div class="globe-node" style="top: 30%; left: 40%;"></div>
-                <div class="globe-node" style="top: 55%; left: 65%; animation-delay: 0.5s;"></div>
-                <div class="globe-node" style="top: 45%; left: 25%; animation-delay: 1.2s;"></div>
-                <div class="globe-node" style="top: 70%; left: 45%; animation-delay: 0.8s;"></div>
-                
-                <div class="globe-overlay">
-                    <h2 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -1px; margin-bottom: 0.5rem; background: linear-gradient(to bottom, #fff, #64748b); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Global Market Pulse</h2>
-                    <p style="color: var(--primary); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;">Automated Neural Forecasting</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Login Form Section -->
-        <div class="auth-container">
-            <div class="card auth-card">
-                <div class="logo" style="margin-bottom: 2rem; justify-content: center;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="3"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+    <div class="auth-page">
+        <div class="card auth-card fade-in">
+            <div class="auth-header">
+                <div class="logo" style="justify-content: center; margin-bottom: 1.5rem;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                        <polyline points="17 6 23 6 23 12"></polyline>
+                    </svg>
                     Terminal.AI
                 </div>
-                
-                <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; text-align: center; color: white;">Initialize Session</h1>
-                <p style="text-align: center; color: var(--text-muted); margin-bottom: 2.5rem; font-size: 0.875rem;">Enter your secure credentials to proceed.</p>
-
-                <form id="login-form">
-                    <div class="form-group">
-                        <label class="form-label">Terminal ID</label>
-                        <input type="text" id="username" class="form-input" placeholder="Username" required autofocus>
-                    </div>
-                    <div class="form-group" style="position: relative;">
-                        <label class="form-label">Security Key</label>
-                        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
-                        <span id="toggle-pwd" style="position: absolute; right: 1rem; top: 2.3rem; font-size: 0.7rem; font-weight: 800; color: var(--primary); cursor: pointer; text-transform: uppercase;">Show</span>
-                    </div>
-                    
-                    <button type="submit" id="login-btn" class="btn btn-primary" style="margin-top: 1.5rem;">Access Dashboard</button>
-                </form>
-
-                <div id="alert-box" class="hidden" style="margin-top: 1.5rem; color: var(--danger); font-size: 0.85rem; text-align: center; padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2);"></div>
-
-                <p style="margin-top: 2.5rem; text-align: center; font-size: 0.875rem; color: var(--text-muted);">
-                    Unauthorized access? <a href="/signup" style="color: var(--primary); text-decoration: none; font-weight: 700;">Establish Connection</a>
-                </p>
+                <h1>Initialize Session</h1>
+                <p style="color: var(--text-muted); font-size: 0.875rem;">Enter your secure credentials to proceed.</p>
             </div>
+
+            <div id="authAlert" class="alert hidden"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Terminal ID</label>
+                    <input type="text" name="username" class="form-input" placeholder="Desired Username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Establish Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <span class="spinner hidden"></span>
+                    <span class="btn-text-content">Access Dashboard</span>
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 2rem; font-size: 0.875rem; color: var(--text-muted);">
+                Unauthorized access? <a href="/signup" style="color: var(--primary); text-decoration: none;">New Connection</a>
+            </p>
         </div>
     </div>
-
-    <!-- Globe Script -->
-    <script>
-        const canvas = document.getElementById('globe-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-
-        function resize() {
-            width = canvas.width = canvas.offsetWidth;
-            height = canvas.height = canvas.offsetHeight;
-        }
-        window.onresize = resize;
-        resize();
-
-        let rotation = 0;
-        function draw() {
-            ctx.clearRect(0, 0, width, height);
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const radius = Math.min(width, height) * 0.35;
-
-            // Draw ATMOSPHERE GLOW
-            const glow = ctx.createRadialGradient(centerX, centerY, radius * 0.8, centerX, centerY, radius * 1.2);
-            glow.addColorStop(0, 'rgba(59, 130, 246, 0.1)');
-            glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = glow;
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius * 1.3, 0, Math.PI * 2); ctx.fill();
-
-            // Draw MAIN SPHERE
-            ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
-            ctx.lineWidth = 1;
-            
-            // Longitude lines
-            for(let i = 0; i < 12; i++) {
-                const angle = (i / 12) * Math.PI * 2 + rotation;
-                const xRadius = radius * Math.cos(angle);
-                ctx.beginPath();
-                ctx.ellipse(centerX, centerY, Math.abs(xRadius), radius, 0, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Latitude lines
-            for(let i = 1; i < 6; i++) {
-                const y = centerY + (i - 3) * (radius * 0.4);
-                const r = Math.sqrt(Math.pow(radius, 2) - Math.pow((i - 3) * (radius * 0.4), 2));
-                ctx.beginPath();
-                ctx.ellipse(centerX, y, r, r * 0.2, 0, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Draw BORDER
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.stroke();
-
-            rotation += 0.002;
-            requestAnimationFrame(draw);
-        }
-        draw();
-
-        // Password Show/Hide
-        document.getElementById('toggle-pwd').addEventListener('click', function() {
-            const pwd = document.getElementById('password');
-            if(pwd.type === 'password') {
-                pwd.type = 'text'; this.textContent = 'Hide';
-            } else {
-                pwd.type = 'password'; this.textContent = 'Show';
-            }
-        });
-
-        // Auth Logic
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('login-btn');
-            btn.innerHTML = '<span class="spinner"></span> AUTHENTICATING...';
-            btn.disabled = true;
-
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            try {
-                const res = await fetch('/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    localStorage.setItem('token', data.access_token);
-                    window.location.href = '/dashboard';
-                } else {
-                    const alert = document.getElementById('alert-box');
-                    alert.textContent = data.detail || 'Access Denied';
-                    alert.classList.remove('hidden');
-                }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                btn.innerHTML = 'Access Dashboard'; btn.disabled = false;
-            }
-        });
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
