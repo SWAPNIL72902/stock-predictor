@@ -3,81 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signup | Terminal.AI</title>
+    <title>Sign Up | Terminal.AI</title>
     <link rel="stylesheet" href="./style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        .split-layout { display: flex; min-height: 100vh; width: 100%; }
-        .info-pane {
-            flex: 1.2;
-            background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 60%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 5rem;
-            position: relative;
-        }
-        .form-pane {
-            flex: 1;
-            background: #030712;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            border-left: 1px solid var(--glass-border);
-        }
-        .branding h1 { font-size: 3.5rem; font-weight: 900; letter-spacing: -2px; color: var(--primary); margin-bottom: 1rem; }
-        .branding p { font-size: 1.25rem; color: var(--text-muted); max-width: 450px; line-height: 1.6; }
-        
-        .auth-card {
-            width: 100%;
-            max-width: 400px;
-            padding: 2.5rem;
-            background: rgba(17, 24, 39, 0.5);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--glass-border);
-            border-radius: 1.5rem;
-        }
-        .auth-card h2 { font-size: 1.75rem; font-weight: 800; margin-bottom: 2rem; }
-
-        @media (max-width: 1024px) {
-            .info-pane { display: none; }
-            .form-pane { border: none; }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <canvas id="bg-canvas"></canvas>
-    
-    <div class="split-layout">
-        <div class="info-pane">
-            <div class="branding">
-                <h1>Establish Node</h1>
-                <p>Join the next generation of predictive financial intelligence. Create your identity node. </p>
-            </div>
-        </div>
-        
-        <div class="form-pane">
-            <div class="auth-card fade-in">
-                <h2>Join Terminal</h2>
-                <form id="signupForm">
-                    <div class="form-group">
-                        <label class="form-label">Desired Identity ID</label>
-                        <input type="text" name="username" class="form-input" placeholder="Desired Username" required autofocus>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Establish Security Key</label>
-                        <input type="password" name="password" class="form-input" placeholder="••••••••" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="margin-top: 1.5rem;">
-                        Create Node
-                    </button>
-                </form>
 
-                <p style="text-align: center; margin-top: 2rem; font-size: 0.85rem; color: var(--text-muted);">
-                    Already established? <a href="./index.html" style="color: var(--primary); text-decoration: none; font-weight: 700;">Sign in</a>
+    <div class="auth-container">
+        <div class="auth-card fade-in">
+            <div class="auth-header">
+                <h1>Create an account</h1>
+                <p>Start your financial intelligence journey</p>
+            </div>
+
+            <form id="signupForm">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" name="username" class="form-input" placeholder="name@company.com" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    Create Account
+                </button>
+            </form>
+
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem;">
+                <p style="color: var(--text-muted);">
+                    Already have an account? <a href="./index.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Sign in</a>
                 </p>
             </div>
         </div>
